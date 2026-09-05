@@ -31,7 +31,7 @@ export function RoadDetailDrawer({ roadNumber, onClose, onNavigateToLocation }: 
         <div className="mb-4 flex items-start justify-between">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">
-              <RoadNumberBadge roadNumber={roadNumber} />
+              <RoadNumberBadge roadNumber={roadNumber} size="lg" />
             </h2>
             {detail && <p className="mt-1 text-sm font-bold text-slate-700">{detail.segments[0]?.road_name}</p>}
           </div>

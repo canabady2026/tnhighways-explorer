@@ -75,8 +75,7 @@ function Dashboard() {
         <div>
           <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Tamil Nadu Highways Explorer</h1>
           <p className="text-sm text-slate-500">
-            Browse the TN PWD highway roster — {status === "sqlite" ? "offline" : "live"} dataset of 15,568 road
-            segments.
+            Browse TN Highways 2025 — {status === "sqlite" ? "offline" : "live"} dataset of 15,568 road segments.
           </p>
         </div>
         <div className="flex flex-col items-end gap-2">
