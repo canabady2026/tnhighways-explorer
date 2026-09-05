@@ -73,6 +73,12 @@ export interface StatsRow {
 
 export type TextGroupColumn = "circle" | "division" | "sub_division" | "road_number" | "road_name";
 
+export interface FilteredSummary {
+  segmentCount: number;
+  totalKm: number;
+  distinctRoadCount: number;
+}
+
 /** Implemented by both the AWS API client and the client-side SQLite fallback. */
 export interface DataSource {
   kind: "api" | "sqlite";
@@ -82,4 +88,5 @@ export interface DataSource {
   getDivisions(circle?: string): Promise<Division[]>;
   getSubDivisions(circle?: string, division?: string): Promise<SubDivision[]>;
   getStats(groupBy: TextGroupColumn): Promise<StatsRow[]>;
+  getFilteredSummary(filters: FilterClause[], q?: string): Promise<FilteredSummary>;
 }

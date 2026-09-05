@@ -6,6 +6,7 @@ import type {
   DataSource,
   Division,
   FilterClause,
+  FilteredSummary,
   RoadDetail,
   RoadsQuery,
   RoadsResult,
@@ -201,6 +202,24 @@ export class SqliteDataSource implements DataSource {
        FROM ${TABLE} GROUP BY ${groupBy} ORDER BY total_km DESC`,
       []
     );
+  }
+
+  async getFilteredSummary(filters: FilterClause[], q?: string): Promise<FilteredSummary> {
+    const db = await loadDb();
+    const { sql: whereSql, params } = buildWhere(filters, q);
+    const [row] = rowsOf<{ segment_count: number; total_km: number | null; distinct_road_count: number }>(
+      db,
+      `SELECT COUNT(*) AS segment_count,
+              ROUND(SUM(${colExpr("total_km")}), 3) AS total_km,
+              COUNT(DISTINCT road_number) AS distinct_road_count
+       FROM ${TABLE} ${whereSql}`,
+      params
+    );
+    return {
+      segmentCount: row.segment_count,
+      totalKm: row.total_km ?? 0,
+      distinctRoadCount: row.distinct_road_count,
+    };
   }
 }
 

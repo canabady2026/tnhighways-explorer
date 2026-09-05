@@ -46,3 +46,20 @@ export function toFilterClauses(f: FiltersState): FilterClause[] {
 export function hasActiveFilters(f: FiltersState): boolean {
   return Object.entries(f).some(([key, value]) => key !== "sort" && value !== "");
 }
+
+export interface LocationSelection {
+  circle: string;
+  division?: string;
+  subDivision?: string;
+}
+
+/** Replaces all filters with just this location -- used when clicking a
+ * circle/division/sub-division badge to jump the main list to that place. */
+export function filtersForLocation(location: LocationSelection): FiltersState {
+  return {
+    ...EMPTY_FILTERS,
+    circle: location.circle,
+    division: location.division ?? "",
+    subDivision: location.subDivision ?? "",
+  };
+}

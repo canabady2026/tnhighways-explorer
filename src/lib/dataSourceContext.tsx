@@ -15,7 +15,7 @@ export type Status = "checking" | "api" | "sqlite" | "sqlite-load-error";
 
 function envDefaultMode(): Mode {
   const configured = process.env.NEXT_PUBLIC_DATA_SOURCE_MODE;
-  return configured === "api" || configured === "sqlite" ? configured : "auto";
+  return configured === "api" || configured === "auto" ? configured : "sqlite";
 }
 
 interface Ctx {

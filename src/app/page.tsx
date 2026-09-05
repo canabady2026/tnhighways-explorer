@@ -3,6 +3,8 @@
 import { useState } from "react";
 import useSWR from "swr";
 import { FilterPanel } from "@/components/FilterPanel";
+import { FilterSummary } from "@/components/FilterSummary";
+import { FontControls } from "@/components/FontControls";
 import { FullPageResultsMap } from "@/components/FullPageResultsMap";
 import { FullPageRoadMap } from "@/components/FullPageRoadMap";
 import { KpiCards } from "@/components/KpiCards";
@@ -11,7 +13,7 @@ import { RoadDetailDrawer } from "@/components/RoadDetailDrawer";
 import { RoadsTable } from "@/components/RoadsTable";
 import { SourceBadge } from "@/components/SourceBadge";
 import { DataSourceProvider, useDataSource } from "@/lib/dataSourceContext";
-import { EMPTY_FILTERS, toFilterClauses, type FiltersState } from "@/lib/filters";
+import { EMPTY_FILTERS, filtersForLocation, toFilterClauses, type FiltersState } from "@/lib/filters";
 import { buildOverpassTurboUrl, buildResultsMapUrl, overpassAreaName, parseRoute } from "@/lib/mapLinks";
 import { DEFAULT_LIMIT } from "@/lib/schema";
 import { useDebounced } from "@/lib/useDebounced";
@@ -77,7 +79,10 @@ function Dashboard() {
             segments.
           </p>
         </div>
-        <SourceBadge />
+        <div className="flex flex-col items-end gap-2">
+          <FontControls />
+          <SourceBadge />
+        </div>
       </header>
 
       <KpiCards kpis={kpis ?? []} loading={kpisLoading} />
@@ -111,6 +116,7 @@ function Dashboard() {
             onRowClick={setSelectedRoad}
           />
           <Pagination pagination={pagination} limit={limit} onLimitChange={setLimit} onOffsetChange={setOffset} />
+          <FilterSummary filters={debouncedFilters} />
         </div>
       </div>
 
@@ -127,7 +133,11 @@ function Dashboard() {
         .
       </footer>
 
-      <RoadDetailDrawer roadNumber={selectedRoad} onClose={() => setSelectedRoad(null)} />
+      <RoadDetailDrawer
+        roadNumber={selectedRoad}
+        onClose={() => setSelectedRoad(null)}
+        onNavigateToLocation={(location) => setFilters(filtersForLocation(location))}
+      />
     </div>
   );
 }

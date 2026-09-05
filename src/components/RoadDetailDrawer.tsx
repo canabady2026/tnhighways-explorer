@@ -1,12 +1,20 @@
 "use client";
 
 import useSWR from "swr";
+import { LocationBadge } from "@/components/LocationBadge";
 import { RoadMap } from "@/components/RoadMap";
 import { RoadNumberBadge } from "@/components/RoadNumberBadge";
 import { useDataSource } from "@/lib/dataSourceContext";
+import type { LocationSelection } from "@/lib/filters";
 import { buildSingleRoadMapUrl } from "@/lib/mapLinks";
 
-export function RoadDetailDrawer({ roadNumber, onClose }: { roadNumber: string | null; onClose: () => void }) {
+interface Props {
+  roadNumber: string | null;
+  onClose: () => void;
+  onNavigateToLocation: (location: LocationSelection) => void;
+}
+
+export function RoadDetailDrawer({ roadNumber, onClose, onNavigateToLocation }: Props) {
   const { source } = useDataSource();
 
   const key = roadNumber && source ? (["road", source.kind, roadNumber] as const) : null;
@@ -25,7 +33,7 @@ export function RoadDetailDrawer({ roadNumber, onClose }: { roadNumber: string |
             <h2 className="text-lg font-semibold text-slate-900">
               <RoadNumberBadge roadNumber={roadNumber} />
             </h2>
-            {detail && <p className="mt-1 text-sm text-slate-500">{detail.segments[0]?.road_name}</p>}
+            {detail && <p className="mt-1 text-sm font-bold text-slate-700">{detail.segments[0]?.road_name}</p>}
           </div>
           <button
             onClick={onClose}
@@ -70,16 +78,40 @@ export function RoadDetailDrawer({ roadNumber, onClose }: { roadNumber: string |
 
             <h3 className="mb-2 text-sm font-semibold text-slate-900">Segments</h3>
             <ul className="flex flex-col gap-2">
-              {detail.segments.map((seg, i) => (
-                <li key={i} className="rounded-lg border border-slate-200 p-3 text-sm">
-                  <div className="font-medium text-slate-900">
-                    {seg.circle} · {seg.division} · {seg.sub_division}
-                  </div>
-                  <div className="mt-1 text-slate-600 tabular-nums">
-                    km {seg.start_km} – {seg.end_km} ({seg.total_km} km)
-                  </div>
-                </li>
-              ))}
+              {detail.segments.map((seg, i) => {
+                const navigate = (location: LocationSelection) => {
+                  onNavigateToLocation(location);
+                  onClose();
+                };
+                return (
+                  <li key={i} className="rounded-lg border border-slate-200 p-3 text-sm">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <LocationBadge
+                        category="circle"
+                        value={seg.circle}
+                        onClick={() => navigate({ circle: seg.circle })}
+                      />
+                      <span className="text-slate-300">·</span>
+                      <LocationBadge
+                        category="division"
+                        value={seg.division}
+                        onClick={() => navigate({ circle: seg.circle, division: seg.division })}
+                      />
+                      <span className="text-slate-300">·</span>
+                      <LocationBadge
+                        category="sub_division"
+                        value={seg.sub_division}
+                        onClick={() =>
+                          navigate({ circle: seg.circle, division: seg.division, subDivision: seg.sub_division })
+                        }
+                      />
+                    </div>
+                    <div className="mt-1.5 text-slate-600 tabular-nums">
+                      km {seg.start_km} – {seg.end_km} ({seg.total_km} km)
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           </>
         )}

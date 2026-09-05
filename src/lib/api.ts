@@ -2,6 +2,8 @@ import type {
   Circle,
   DataSource,
   Division,
+  FilterClause,
+  FilteredSummary,
   RoadDetail,
   RoadsQuery,
   RoadsResult,
@@ -10,11 +12,11 @@ import type {
   TextGroupColumn,
 } from "./types";
 
-/** Translates a RoadsQuery into the API's `col__op=value` filter DSL (see tnhighways-api/src/db.py). */
-function buildParams(query: RoadsQuery): URLSearchParams {
+/** Translates filter clauses into the API's `col__op=value` filter DSL (see tnhighways-api/src/db.py). */
+function buildFilterParams(filters: FilterClause[], q?: string): URLSearchParams {
   const params = new URLSearchParams();
 
-  for (const { column, op, value } of query.filters) {
+  for (const { column, op, value } of filters) {
     const key = op === "eq" ? column : `${column}__${op}`;
     if (Array.isArray(value)) {
       params.set(key, value.join(","));
@@ -23,12 +25,16 @@ function buildParams(query: RoadsQuery): URLSearchParams {
     }
   }
 
-  if (query.q) params.set("q", query.q);
+  if (q) params.set("q", q);
+  return params;
+}
+
+function buildParams(query: RoadsQuery): URLSearchParams {
+  const params = buildFilterParams(query.filters, query.q);
   if (query.sort) params.set("sort", query.sort);
   if (query.fields?.length) params.set("fields", query.fields.join(","));
   params.set("limit", String(query.limit));
   params.set("offset", String(query.offset));
-
   return params;
 }
 
@@ -81,6 +87,18 @@ export class ApiDataSource implements DataSource {
   async getStats(groupBy: TextGroupColumn): Promise<StatsRow[]> {
     const { data } = await this.getJson<{ data: StatsRow[] }>(`/stats?group_by=${groupBy}`);
     return data;
+  }
+
+  async getFilteredSummary(filters: FilterClause[], q?: string): Promise<FilteredSummary> {
+    const params = buildFilterParams(filters, q);
+    const body = await this.getJson<{ segment_count: number; total_km: number; distinct_road_count: number }>(
+      `/roads/summary?${params}`
+    );
+    return {
+      segmentCount: body.segment_count,
+      totalKm: body.total_km,
+      distinctRoadCount: body.distinct_road_count,
+    };
   }
 }
 
