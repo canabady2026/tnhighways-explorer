@@ -7,14 +7,16 @@
 export interface RoadClass {
   category: string;
   className: string;
+  /** Matches the badge's text color (Tailwind "-700" shade), for the Leaflet map line. */
+  strokeColor: string;
 }
 
 const CLASSES = {
-  NH: { category: "NH", className: "bg-orange-50 text-orange-700 border-orange-200" },
-  SH: { category: "SH", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  MDR: { category: "MDR", className: "bg-blue-50 text-blue-700 border-blue-200" },
-  ODR: { category: "ODR", className: "bg-pink-50 text-pink-700 border-pink-200" },
-  OTHER: { category: "Other", className: "bg-slate-50 text-slate-700 border-slate-200" },
+  NH: { category: "NH", className: "bg-orange-50 text-orange-700 border-orange-200", strokeColor: "#c2410c" },
+  SH: { category: "SH", className: "bg-emerald-50 text-emerald-700 border-emerald-200", strokeColor: "#047857" },
+  MDR: { category: "MDR", className: "bg-blue-50 text-blue-700 border-blue-200", strokeColor: "#1d4ed8" },
+  ODR: { category: "ODR", className: "bg-pink-50 text-pink-700 border-pink-200", strokeColor: "#be185d" },
+  OTHER: { category: "Other", className: "bg-slate-50 text-slate-700 border-slate-200", strokeColor: "#334155" },
 } as const;
 
 export function classifyRoadNumber(roadNumber: string): RoadClass {

@@ -5,11 +5,13 @@ import { useEffect, useRef } from "react";
 import useSWR from "swr";
 import "leaflet/dist/leaflet.css";
 import { fetchOsmWays, OsmUnavailableError, toOsmRef } from "@/lib/osm";
+import { classifyRoadNumber } from "@/lib/roadNumberStyle";
 
-export function RoadMap({ roadNumber }: { roadNumber: string }) {
+export function RoadMap({ roadNumber, fullHeight = false }: { roadNumber: string; fullHeight?: boolean }) {
   const osmRef = toOsmRef(roadNumber);
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
+  const heightClass = fullHeight ? "h-full" : "h-56";
 
   const {
     data: ways,
@@ -29,7 +31,7 @@ export function RoadMap({ roadNumber }: { roadNumber: string }) {
       const L = (await import("leaflet")).default;
       if (disposed || !containerRef.current) return;
 
-      const map = L.map(containerRef.current, { scrollWheelZoom: false });
+      const map = L.map(containerRef.current, { scrollWheelZoom: fullHeight });
       mapRef.current = map;
 
       L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -37,9 +39,10 @@ export function RoadMap({ roadNumber }: { roadNumber: string }) {
         maxZoom: 18,
       }).addTo(map);
 
+      const { strokeColor } = classifyRoadNumber(roadNumber);
       const polyline = L.polyline(
         ways.map((way) => way.map((pt) => [pt.lat, pt.lon] as [number, number])),
-        { color: "#2563eb", weight: 4 }
+        { color: strokeColor, weight: 4 }
       ).addTo(map);
 
       map.fitBounds(polyline.getBounds(), { padding: [16, 16] });
@@ -50,7 +53,7 @@ export function RoadMap({ roadNumber }: { roadNumber: string }) {
       mapRef.current?.remove();
       mapRef.current = null;
     };
-  }, [ways]);
+  }, [ways, roadNumber, fullHeight]);
 
   if (!osmRef) {
     return <p className="text-sm text-slate-500">Map not available for this road&apos;s classification.</p>;
@@ -58,7 +61,9 @@ export function RoadMap({ roadNumber }: { roadNumber: string }) {
 
   if (isLoading) {
     return (
-      <div className="flex h-56 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-sm text-slate-400">
+      <div
+        className={`flex ${heightClass} items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-sm text-slate-400`}
+      >
         Loading map…
       </div>
     );
@@ -77,5 +82,5 @@ export function RoadMap({ roadNumber }: { roadNumber: string }) {
     return <p className="text-sm text-slate-500">This road isn&apos;t mapped in OpenStreetMap yet.</p>;
   }
 
-  return <div ref={containerRef} className="h-56 w-full rounded-lg border border-slate-200" />;
+  return <div ref={containerRef} className={`${heightClass} w-full rounded-lg border border-slate-200`} />;
 }

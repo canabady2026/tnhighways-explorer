@@ -3,6 +3,8 @@
 import { useState } from "react";
 import useSWR from "swr";
 import { FilterPanel } from "@/components/FilterPanel";
+import { FullPageResultsMap } from "@/components/FullPageResultsMap";
+import { FullPageRoadMap } from "@/components/FullPageRoadMap";
 import { KpiCards } from "@/components/KpiCards";
 import { Pagination } from "@/components/Pagination";
 import { RoadDetailDrawer } from "@/components/RoadDetailDrawer";
@@ -10,6 +12,7 @@ import { RoadsTable } from "@/components/RoadsTable";
 import { SourceBadge } from "@/components/SourceBadge";
 import { DataSourceProvider, useDataSource } from "@/lib/dataSourceContext";
 import { EMPTY_FILTERS, toFilterClauses, type FiltersState } from "@/lib/filters";
+import { buildResultsMapUrl, parseRoute } from "@/lib/mapLinks";
 import { DEFAULT_LIMIT } from "@/lib/schema";
 import { useDebounced } from "@/lib/useDebounced";
 
@@ -83,6 +86,16 @@ function Dashboard() {
         <FilterPanel filters={filters} onChange={setFilters} />
 
         <div className="flex flex-col gap-3">
+          <div className="flex justify-end">
+            <a
+              href={buildResultsMapUrl(filters)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-600 underline decoration-dotted hover:text-blue-800"
+            >
+              View matching roads on map ↗
+            </a>
+          </div>
           <RoadsTable
             rows={rows}
             loading={loading}
@@ -112,10 +125,23 @@ function Dashboard() {
   );
 }
 
+function Router() {
+  // Full-page/full-window map views are opened as plain URLs (new tab),
+  // so the route is whatever's in the query string on first load -- read
+  // via SWR (client-only, never during the static prerender pass) rather
+  // than an effect that would call setState directly.
+  const { data: route } = useSWR("route", () => parseRoute(window.location.search));
+
+  if (!route) return null;
+  if (route.mode === "single") return <FullPageRoadMap roadNumber={route.roadNumber} />;
+  if (route.mode === "results") return <FullPageResultsMap filters={route.filters} />;
+  return <Dashboard />;
+}
+
 export default function Home() {
   return (
     <DataSourceProvider>
-      <Dashboard />
+      <Router />
     </DataSourceProvider>
   );
 }

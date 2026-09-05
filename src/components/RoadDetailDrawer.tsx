@@ -4,6 +4,7 @@ import useSWR from "swr";
 import { RoadMap } from "@/components/RoadMap";
 import { RoadNumberBadge } from "@/components/RoadNumberBadge";
 import { useDataSource } from "@/lib/dataSourceContext";
+import { buildSingleRoadMapUrl } from "@/lib/mapLinks";
 
 export function RoadDetailDrawer({ roadNumber, onClose }: { roadNumber: string | null; onClose: () => void }) {
   const { source } = useDataSource();
@@ -52,7 +53,17 @@ export function RoadDetailDrawer({ roadNumber, onClose }: { roadNumber: string |
               </div>
             </div>
 
-            <h3 className="mb-2 text-sm font-semibold text-slate-900">Map</h3>
+            <div className="mb-2 flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-slate-900">Map</h3>
+              <a
+                href={buildSingleRoadMapUrl(roadNumber)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-blue-600 underline decoration-dotted hover:text-blue-800"
+              >
+                Open in full window ↗
+              </a>
+            </div>
             <div className="mb-5">
               <RoadMap roadNumber={roadNumber} />
             </div>

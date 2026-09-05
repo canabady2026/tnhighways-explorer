@@ -73,3 +73,36 @@ out geom;`;
     .filter((el) => el.type === "way" && Array.isArray(el.geometry) && el.geometry.length > 1)
     .map((el) => el.geometry!.map((pt) => ({ lat: pt.lat, lon: pt.lon })));
 }
+
+/**
+ * Fetches OSM route geometry for many roads at once, keyed by the
+ * *original* road_number (not the rewritten OSM ref). Runs a bounded
+ * number of requests concurrently rather than one combined Overpass query,
+ * since the free public Overpass instance rate-limits aggressively -- a
+ * handful of concurrent requests is far less likely to get 429'd than one
+ * large/slow combined query, and one road failing doesn't sink the batch.
+ */
+export async function fetchOsmWaysForRoads(
+  roadNumbers: string[],
+  { concurrency = 3 }: { concurrency?: number } = {}
+): Promise<Map<string, LatLon[][]>> {
+  const result = new Map<string, LatLon[][]>();
+  let next = 0;
+
+  async function worker() {
+    while (next < roadNumbers.length) {
+      const roadNumber = roadNumbers[next++];
+      const ref = toOsmRef(roadNumber);
+      if (!ref) continue;
+      try {
+        const ways = await fetchOsmWays(ref);
+        if (ways.length > 0) result.set(roadNumber, ways);
+      } catch {
+        // Skip roads that fail or get rate-limited rather than aborting the whole batch.
+      }
+    }
+  }
+
+  await Promise.all(Array.from({ length: Math.min(concurrency, roadNumbers.length) }, worker));
+  return result;
+}
