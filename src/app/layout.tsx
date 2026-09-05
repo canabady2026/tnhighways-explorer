@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "TN Highways Explorer",
-  description: "Browse the Tamil Nadu PWD highway roster — 15,568 road segments across 9 circles.",
+  description: "Browse TN Highways 2025 — 15,568 road segments across 9 circles.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

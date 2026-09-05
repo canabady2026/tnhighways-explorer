@@ -1,6 +1,7 @@
 "use client";
 
 import useSWR from "swr";
+import { RoadMap } from "@/components/RoadMap";
 import { RoadNumberBadge } from "@/components/RoadNumberBadge";
 import { useDataSource } from "@/lib/dataSourceContext";
 
@@ -49,6 +50,11 @@ export function RoadDetailDrawer({ roadNumber, onClose }: { roadNumber: string |
                 <div className="text-xs uppercase tracking-wide text-slate-500">Total length</div>
                 <div className="text-xl font-semibold text-slate-900">{detail.total_km} km</div>
               </div>
+            </div>
+
+            <h3 className="mb-2 text-sm font-semibold text-slate-900">Map</h3>
+            <div className="mb-5">
+              <RoadMap roadNumber={roadNumber} />
             </div>
 
             <h3 className="mb-2 text-sm font-semibold text-slate-900">Segments</h3>

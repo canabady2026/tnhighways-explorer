@@ -95,7 +95,7 @@ function Dashboard() {
       </div>
 
       <footer className="mt-4 border-t border-slate-200 pt-4 text-xs text-slate-400">
-        Source: Tamil Nadu PWD Highways roster, 2025. Interface inspired by{" "}
+        Source: TN Highways 2025. Interface inspired by{" "}
         <a
           href="https://opendatakerala.org/LSG2025/"
           target="_blank"
