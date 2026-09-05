@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 import useSWR from "swr";
 import { ApiDataSource, isApiHealthy } from "./api";
 import { SqliteDataSource } from "./sqlite";
@@ -9,11 +9,20 @@ import type { DataSource } from "./types";
 export const DEFAULT_API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "https://au80g7fdk7.execute-api.ap-south-1.amazonaws.com";
 
-type Status = "checking" | "api" | "sqlite" | "sqlite-load-error";
+/** "auto" health-checks the API and falls back to SQLite; "api"/"sqlite" force a backend. */
+export type Mode = "auto" | "api" | "sqlite";
+export type Status = "checking" | "api" | "sqlite" | "sqlite-load-error";
+
+function envDefaultMode(): Mode {
+  const configured = process.env.NEXT_PUBLIC_DATA_SOURCE_MODE;
+  return configured === "api" || configured === "sqlite" ? configured : "auto";
+}
 
 interface Ctx {
   source: DataSource | null;
   status: Status;
+  mode: Mode;
+  setMode: (mode: Mode) => void;
   error: string | null;
   retryApi: () => void;
 }
@@ -21,6 +30,7 @@ interface Ctx {
 const DataSourceCtx = createContext<Ctx | null>(null);
 
 const sqliteSource = new SqliteDataSource();
+const apiSource = new ApiDataSource(DEFAULT_API_BASE_URL);
 
 interface Detection {
   status: Extract<Status, "api" | "sqlite" | "sqlite-load-error">;
@@ -42,20 +52,25 @@ async function detectDataSource(): Promise<Detection> {
 }
 
 export function DataSourceProvider({ children }: { children: ReactNode }) {
-  const { data, isLoading, mutate } = useSWR("data-source-detect", detectDataSource);
+  const [mode, setMode] = useState<Mode>(envDefaultMode);
 
-  const status: Status = isLoading || !data ? "checking" : data.status;
-  const error = data?.error ?? null;
+  // Only probed in "auto" mode -- a forced mode skips the health check
+  // entirely and commits to that backend.
+  const { data, isLoading, mutate } = useSWR(mode === "auto" ? "data-source-detect" : null, detectDataSource);
+
+  const status: Status =
+    mode === "api" ? "api" : mode === "sqlite" ? "sqlite" : isLoading || !data ? "checking" : data.status;
+  const error = mode === "auto" ? (data?.error ?? null) : null;
 
   const source = useMemo<DataSource | null>(() => {
-    if (status === "api") return new ApiDataSource(DEFAULT_API_BASE_URL);
+    if (status === "api") return apiSource;
     if (status === "sqlite") return sqliteSource;
     return null;
   }, [status]);
 
   const value = useMemo<Ctx>(
-    () => ({ source, status, error, retryApi: () => mutate() }),
-    [source, status, error, mutate]
+    () => ({ source, status, mode, setMode, error, retryApi: () => mutate() }),
+    [source, status, mode, error, mutate]
   );
 
   return <DataSourceCtx.Provider value={value}>{children}</DataSourceCtx.Provider>;

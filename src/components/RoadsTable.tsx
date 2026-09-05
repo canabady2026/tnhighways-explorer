@@ -1,5 +1,6 @@
 "use client";
 
+import { RoadNumberBadge } from "@/components/RoadNumberBadge";
 import type { Road } from "@/lib/types";
 
 interface Column {
@@ -84,7 +85,9 @@ export function RoadsTable({ rows, loading, sort, onSortChange, onRowClick }: Pr
                 <td className="whitespace-nowrap px-3 py-2 text-slate-700">{row.circle}</td>
                 <td className="whitespace-nowrap px-3 py-2 text-slate-700">{row.division}</td>
                 <td className="whitespace-nowrap px-3 py-2 text-slate-700">{row.sub_division}</td>
-                <td className="whitespace-nowrap px-3 py-2 font-medium text-slate-900">{row.road_number}</td>
+                <td className="whitespace-nowrap px-3 py-2">
+                  <RoadNumberBadge roadNumber={row.road_number} />
+                </td>
                 <td className="px-3 py-2 text-slate-700">{row.road_name}</td>
                 <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums text-slate-700">
                   {row.start_km}

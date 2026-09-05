@@ -1,6 +1,7 @@
 "use client";
 
 import useSWR from "swr";
+import { RoadNumberBadge } from "@/components/RoadNumberBadge";
 import { useDataSource } from "@/lib/dataSourceContext";
 
 export function RoadDetailDrawer({ roadNumber, onClose }: { roadNumber: string | null; onClose: () => void }) {
@@ -19,8 +20,10 @@ export function RoadDetailDrawer({ roadNumber, onClose }: { roadNumber: string |
       >
         <div className="mb-4 flex items-start justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">{roadNumber}</h2>
-            {detail && <p className="text-sm text-slate-500">{detail.segments[0]?.road_name}</p>}
+            <h2 className="text-lg font-semibold text-slate-900">
+              <RoadNumberBadge roadNumber={roadNumber} />
+            </h2>
+            {detail && <p className="mt-1 text-sm text-slate-500">{detail.segments[0]?.road_name}</p>}
           </div>
           <button
             onClick={onClose}

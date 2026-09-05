@@ -1,9 +1,15 @@
 "use client";
 
-import { useDataSource } from "@/lib/dataSourceContext";
+import { useDataSource, type Mode } from "@/lib/dataSourceContext";
+
+const MODES: { value: Mode; label: string }[] = [
+  { value: "auto", label: "Auto" },
+  { value: "api", label: "Live API" },
+  { value: "sqlite", label: "Offline DB" },
+];
 
 export function SourceBadge() {
-  const { status, error, retryApi } = useDataSource();
+  const { status, mode, setMode, error, retryApi } = useDataSource();
 
   const styles: Record<string, string> = {
     checking: "bg-slate-100 text-slate-600 border-slate-200",
@@ -27,28 +33,51 @@ export function SourceBadge() {
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <span
-        className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${styles[status]}`}
-        title={
-          status === "api"
-            ? "Querying the live AWS Lambda API"
-            : status === "sqlite"
-              ? "API unreachable — querying a bundled offline copy of the dataset in your browser"
-              : error || undefined
-        }
-      >
-        <span className={`h-1.5 w-1.5 rounded-full ${dot[status]}`} />
-        {label[status]}
-      </span>
-      {status !== "api" && status !== "checking" && (
-        <button
-          onClick={retryApi}
-          className="text-xs text-slate-500 underline decoration-dotted hover:text-slate-700"
+    <div className="flex flex-col items-end gap-1.5">
+      <div className="flex items-center gap-2">
+        <span
+          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${styles[status]}`}
+          title={
+            status === "api"
+              ? "Querying the AWS Lambda API"
+              : status === "sqlite"
+                ? "Querying a bundled offline copy of the dataset in your browser"
+                : error || undefined
+          }
         >
-          retry API
-        </button>
-      )}
+          <span className={`h-1.5 w-1.5 rounded-full ${dot[status]}`} />
+          {label[status]}
+        </span>
+        {mode === "auto" && (status === "sqlite" || status === "sqlite-load-error") && (
+          <button
+            onClick={retryApi}
+            className="text-xs text-slate-500 underline decoration-dotted hover:text-slate-700"
+          >
+            retry API
+          </button>
+        )}
+      </div>
+
+      <div className="inline-flex overflow-hidden rounded-full border border-slate-300 text-xs">
+        {MODES.map((m, i) => (
+          <button
+            key={m.value}
+            onClick={() => setMode(m.value)}
+            title={
+              m.value === "auto"
+                ? "Automatically use the API, falling back to the offline dataset"
+                : m.value === "api"
+                  ? "Always use the live AWS API"
+                  : "Always use the offline in-browser dataset"
+            }
+            className={`px-2.5 py-1 font-medium transition-colors ${i > 0 ? "border-l border-slate-300" : ""} ${
+              mode === m.value ? "bg-slate-900 text-white" : "bg-white text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

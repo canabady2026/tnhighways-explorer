@@ -127,30 +127,28 @@ export function FilterPanel({ filters, onChange }: Props) {
         />
       </label>
 
-      <div className="flex gap-2">
-        <label className="flex flex-1 flex-col gap-1 text-sm">
-          <span className="font-medium text-slate-700">Min length (km)</span>
-          <input
-            type="number"
-            min={0}
-            step="any"
-            value={filters.totalKmMin}
-            onChange={(e) => set("totalKmMin", e.target.value)}
-            className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm text-slate-900"
-          />
-        </label>
-        <label className="flex flex-1 flex-col gap-1 text-sm">
-          <span className="font-medium text-slate-700">Max length (km)</span>
-          <input
-            type="number"
-            min={0}
-            step="any"
-            value={filters.totalKmMax}
-            onChange={(e) => set("totalKmMax", e.target.value)}
-            className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm text-slate-900"
-          />
-        </label>
-      </div>
+      <label className="flex flex-col gap-1 text-sm">
+        <span className="font-medium text-slate-700">Min length (km)</span>
+        <input
+          type="number"
+          min={0}
+          step="any"
+          value={filters.totalKmMin}
+          onChange={(e) => set("totalKmMin", e.target.value)}
+          className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm text-slate-900"
+        />
+      </label>
+      <label className="flex flex-col gap-1 text-sm">
+        <span className="font-medium text-slate-700">Max length (km)</span>
+        <input
+          type="number"
+          min={0}
+          step="any"
+          value={filters.totalKmMax}
+          onChange={(e) => set("totalKmMax", e.target.value)}
+          className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm text-slate-900"
+        />
+      </label>
     </div>
   );
 }
