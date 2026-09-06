@@ -7,6 +7,7 @@ import { FilterSummary } from "@/components/FilterSummary";
 import { FontControls } from "@/components/FontControls";
 import { FullPageResultsMap } from "@/components/FullPageResultsMap";
 import { FullPageRoadMap } from "@/components/FullPageRoadMap";
+import { HelpModal } from "@/components/HelpModal";
 import { KpiCards } from "@/components/KpiCards";
 import { Pagination } from "@/components/Pagination";
 import { RoadDetailDrawer } from "@/components/RoadDetailDrawer";
@@ -79,7 +80,10 @@ function Dashboard() {
           </p>
         </div>
         <div className="flex flex-col items-end gap-2">
-          <FontControls />
+          <div className="flex items-center gap-2">
+            <FontControls />
+            <HelpModal />
+          </div>
           <SourceBadge />
         </div>
       </header>
