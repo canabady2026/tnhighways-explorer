@@ -14,7 +14,7 @@ import { RoadsTable } from "@/components/RoadsTable";
 import { SourceBadge } from "@/components/SourceBadge";
 import { DataSourceProvider, useDataSource } from "@/lib/dataSourceContext";
 import { EMPTY_FILTERS, filtersForLocation, toFilterClauses, type FiltersState } from "@/lib/filters";
-import { buildOverpassTurboUrl, buildResultsMapUrl, overpassAreaName, parseRoute } from "@/lib/mapLinks";
+import { buildResultsMapUrl, parseRoute } from "@/lib/mapLinks";
 import { DEFAULT_LIMIT } from "@/lib/schema";
 import { useDebounced } from "@/lib/useDebounced";
 
@@ -91,21 +91,14 @@ function Dashboard() {
 
         <div className="flex flex-col gap-3">
           <div className="flex justify-end">
-            {(() => {
-              const area = overpassAreaName(filters);
-              const href = area ? buildOverpassTurboUrl(area) : buildResultsMapUrl(filters);
-              return (
-                <a
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-blue-600 underline decoration-dotted hover:text-blue-800"
-                  title={area ? `Opens all SH/MDR/O/NH roads in ${area} on overpass-turbo.eu` : undefined}
-                >
-                  View matching roads on map ↗
-                </a>
-              );
-            })()}
+            <a
+              href={buildResultsMapUrl(filters)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-600 underline decoration-dotted hover:text-blue-800"
+            >
+              View matching roads on map ↗
+            </a>
           </div>
           <RoadsTable
             rows={rows}

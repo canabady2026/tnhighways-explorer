@@ -73,7 +73,7 @@ export function RoadDetailDrawer({ roadNumber, onClose, onNavigateToLocation }: 
               </a>
             </div>
             <div className="mb-5">
-              <RoadMap roadNumber={roadNumber} />
+              <RoadMap roadNumber={roadNumber} segments={detail.segments} />
             </div>
 
             <h3 className="mb-2 text-sm font-semibold text-slate-900">Segments</h3>

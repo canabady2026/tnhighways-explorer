@@ -4,10 +4,21 @@ import type { Map as LeafletMap } from "leaflet";
 import { useEffect, useRef } from "react";
 import useSWR from "swr";
 import "leaflet/dist/leaflet.css";
+import { buildRoadLabelHtml } from "@/lib/mapLabel";
 import { fetchOsmWays, OsmUnavailableError, toOsmRef } from "@/lib/osm";
 import { classifyRoadNumber } from "@/lib/roadNumberStyle";
+import type { Road } from "@/lib/types";
 
-export function RoadMap({ roadNumber, fullHeight = false }: { roadNumber: string; fullHeight?: boolean }) {
+interface Props {
+  roadNumber: string;
+  /** This road's segments, if known -- supplies the road name and the
+   * sub-division/division/circle line(s) in the map's popup. Omit for a
+   * plain, unlabeled polyline. */
+  segments?: Road[];
+  fullHeight?: boolean;
+}
+
+export function RoadMap({ roadNumber, segments, fullHeight = false }: Props) {
   const osmRef = toOsmRef(roadNumber);
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
@@ -45,6 +56,19 @@ export function RoadMap({ roadNumber, fullHeight = false }: { roadNumber: string
         { color: strokeColor, weight: 4 }
       ).addTo(map);
 
+      if (segments && segments.length > 0) {
+        polyline.bindPopup(
+          buildRoadLabelHtml({
+            roadNumber,
+            roadName: segments[0].road_name,
+            subDivisions: segments.map((s) => s.sub_division),
+            divisions: segments.map((s) => s.division),
+            circles: segments.map((s) => s.circle),
+            strokeColor,
+          })
+        );
+      }
+
       map.fitBounds(polyline.getBounds(), { padding: [16, 16] });
     })();
 
@@ -53,7 +77,7 @@ export function RoadMap({ roadNumber, fullHeight = false }: { roadNumber: string
       mapRef.current?.remove();
       mapRef.current = null;
     };
-  }, [ways, roadNumber, fullHeight]);
+  }, [ways, roadNumber, segments, fullHeight]);
 
   if (!osmRef) {
     return <p className="text-sm text-slate-500">Map not available for this road&apos;s classification.</p>;

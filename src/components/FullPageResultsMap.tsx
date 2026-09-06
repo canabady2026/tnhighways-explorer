@@ -7,6 +7,7 @@ import "leaflet/dist/leaflet.css";
 import { withBasePath } from "@/lib/basePath";
 import { useDataSource } from "@/lib/dataSourceContext";
 import { toFilterClauses, type FiltersState } from "@/lib/filters";
+import { buildRoadLabelHtml } from "@/lib/mapLabel";
 import { fetchOsmWaysForRoads } from "@/lib/osm";
 import { classifyRoadNumber } from "@/lib/roadNumberStyle";
 
@@ -23,6 +24,13 @@ const LEGEND = [
   { label: "Other", color: "#334155" },
 ];
 
+interface RoadLabelInfo {
+  roadName: string;
+  subDivisions: string[];
+  divisions: string[];
+  circles: string[];
+}
+
 export function FullPageResultsMap({ filters }: { filters: FiltersState }) {
   const { source } = useDataSource();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -36,10 +44,29 @@ export function FullPageResultsMap({ filters }: { filters: FiltersState }) {
       q: filters.q || undefined,
       limit: 500,
       offset: 0,
-      fields: ["road_number"],
+      fields: ["road_number", "road_name", "circle", "division", "sub_division"],
     });
+
+    const labelsByRoad = new Map<string, RoadLabelInfo>();
+    for (const row of result.data) {
+      const existing = labelsByRoad.get(row.road_number);
+      if (existing) {
+        existing.subDivisions.push(row.sub_division);
+        existing.divisions.push(row.division);
+        existing.circles.push(row.circle);
+      } else {
+        labelsByRoad.set(row.road_number, {
+          roadName: row.road_name,
+          subDivisions: [row.sub_division],
+          divisions: [row.division],
+          circles: [row.circle],
+        });
+      }
+    }
+
     return {
-      distinct: Array.from(new Set(result.data.map((r) => r.road_number))),
+      distinct: Array.from(labelsByRoad.keys()),
+      labelsByRoad,
       totalSegments: result.pagination.total,
     };
   });
@@ -51,7 +78,7 @@ export function FullPageResultsMap({ filters }: { filters: FiltersState }) {
   const { data: geometries, isLoading: loadingGeom } = useSWR(geomKey, () => fetchOsmWaysForRoads(cappedRoads));
 
   useEffect(() => {
-    if (!geometries || geometries.size === 0 || !containerRef.current) return;
+    if (!geometries || geometries.size === 0 || !containerRef.current || !roadsInfo) return;
 
     let disposed = false;
 
@@ -69,10 +96,24 @@ export function FullPageResultsMap({ filters }: { filters: FiltersState }) {
 
       const lines = Array.from(geometries.entries()).map(([roadNumber, ways]) => {
         const { strokeColor } = classifyRoadNumber(roadNumber);
-        return L.polyline(
+        const info = roadsInfo.labelsByRoad.get(roadNumber);
+        const line = L.polyline(
           ways.map((way) => way.map((pt) => [pt.lat, pt.lon] as [number, number])),
           { color: strokeColor, weight: 3 }
-        ).bindTooltip(roadNumber);
+        );
+        if (info) {
+          line.bindTooltip(
+            buildRoadLabelHtml({
+              roadNumber,
+              roadName: info.roadName,
+              subDivisions: info.subDivisions,
+              divisions: info.divisions,
+              circles: info.circles,
+              strokeColor,
+            })
+          );
+        }
+        return line;
       });
 
       const group = L.featureGroup(lines).addTo(map);
@@ -86,7 +127,7 @@ export function FullPageResultsMap({ filters }: { filters: FiltersState }) {
       mapRef.current = null;
       groupRef.current = null;
     };
-  }, [geometries]);
+  }, [geometries, roadsInfo]);
 
   const backLink = (
     <a href={withBasePath("/")} className="text-sm text-slate-500 underline decoration-dotted hover:text-slate-700">
